@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notes & Files + AI</title>
+  <style>
+    body{font-family:Arial, sans-serif; background:#f4f6f8; padding:20px}
+    .card{background:#fff; padding:20px; border-radius:10px; max-width:700px; margin:auto; text-align:center}
+    h2{margin-top:0}
+    button{padding:8px 12px; margin:6px; cursor:pointer}
+    input, textarea{width:100%; padding:10px; margin:8px 0}
+    .hidden{display:none}
+    ul{text-align:left; list-style:none; padding:0}
+    li{background:#f1f1f1; margin:8px 0; padding:10px; border-radius:6px}
+    .ai-box{background:#eef5ff; padding:12px; border-radius:8px; margin-top:10px}
+  </style>
+</head>
+<body>
+
+<div class="card" id="home">
+  <h2>📂 Notes, Files & AI</h2>
+  <button onclick="goUpload()">⬆️ Upload</button>
+  <button onclick="goView()">👁️ View</button>
+  <button onclick="goAI()">🤖 Meta AI</button>
+</div>
+
+<div class="card hidden" id="uploadPage">
+  <h2>⬆️ Upload</h2>
+  <textarea id="note" placeholder="Write note (optional)"></textarea>
+  <input type="file" id="fileInput" />
+  <input id="filename" placeholder="File name" />
+  <button onclick="saveData()">Save</button>
+  <p id="uploadMsg"></p>
+  <button onclick="goHome()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="passwordPage">
+  <h2>🔐 Password Required</h2>
+  <input type="password" id="viewPass" placeholder="Enter password" />
+  <button onclick="checkPassword()">Continue</button>
+  <p id="passMsg"></p>
+</div>
+
+<div class="card hidden" id="viewPage">
+  <h2>👁️ View Files</h2>
+  <ul id="items"></ul>
+  <button onclick="goHome()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="aiPage">
+  <h2>🤖 Meta AI (Demo)</h2>
+  <div class="ai-box">
+    <p><b>Ask about your uploaded files:</b></p>
+    <input id="aiQuery" placeholder="Ask something..." />
+    <button onclick="askAI()">Ask AI</button>
+    <p id="aiAnswer"></p>
+  </div>
+  <button onclick="goHome()">⬅️ Back</button>
+</div>
+
+<script>
+const PASSWORD = 'arjun';
+
+function hideAll(){['home','uploadPage','passwordPage','viewPage','aiPage'].forEach(id=>document.getElementById(id).classList.add('hidden'));}
+function goHome(){hideAll();home.classList.remove('hidden');}
+function goUpload(){hideAll();uploadPage.classList.remove('hidden');}
+function goView(){hideAll();passwordPage.classList.remove('hidden');}
+function goAI(){hideAll();aiPage.classList.remove('hidden');}
+
+function checkPassword(){
+  if(viewPass.value===PASSWORD){hideAll();loadItems();viewPage.classList.remove('hidden');passMsg.innerText='';}
+  else passMsg.innerText='Wrong password';
+}
+
+function saveData(){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const items=JSON.parse(localStorage.getItem('items')||'[]');
+    items.push({name:filename.value,note:note.value,file:reader.result});
+    localStorage.setItem('items',JSON.stringify(items));
+    uploadMsg.innerText='Saved ✅';
+    note.value=''; filename.value=''; fileInput.value='';
+  };
+  if(fileInput.files.length>0) reader.readAsDataURL(fileInput.files[0]); else reader.onload();
+}
+
+function loadItems(){
+  items.innerHTML='';
+  const data=JSON.parse(localStorage.getItem('items')||'[]');
+  if(!data.length){items.innerHTML='<li>No files</li>'; return;}
+  data.forEach(d=>{const li=document.createElement('li');li.innerHTML=`<b>${d.name}</b><br>${d.note||''}<br><a href="${d.file}" target="_blank">Open</a>`;items.appendChild(li);});
+}
+
+// DEMO AI (Meta AI–like)
+function askAI(){
+  const q=aiQuery.value.toLowerCase();
+  const data=JSON.parse(localStorage.getItem('items')||'[]');
+  if(!q){aiAnswer.innerText='Ask something.';return;}
+  if(q.includes('how many')) aiAnswer.innerText=`You have ${data.length} uploaded files.`;
+  else if(q.includes('list')) aiAnswer.innerText=data.map(d=>d.name).join(', ');
+  else aiAnswer.innerText='I am a demo Meta AI. I can count or list your uploaded files.';
+}
+</script>
+</body>
+</html>
